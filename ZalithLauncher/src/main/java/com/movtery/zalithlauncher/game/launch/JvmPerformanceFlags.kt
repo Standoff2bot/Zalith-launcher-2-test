@@ -45,7 +45,9 @@ object JvmPerformanceFlags {
         "-XX:G1ReservePercent=20",
         "-XX:G1HeapRegionSize=8M",
         "-XX:G1MixedGCCountTarget=4",
-        "-XX:InitiatingHeapOccupancyPercent=15"
+        "-XX:InitiatingHeapOccupancyPercent=15",
+        "-XX:+UseStringDeduplication",
+        "-XX:+AlwaysPreTouch"
     )
 
     /** @return 是否可以应用（即用户尚未手动指定过其他 GC，且尚未完整应用过） */
