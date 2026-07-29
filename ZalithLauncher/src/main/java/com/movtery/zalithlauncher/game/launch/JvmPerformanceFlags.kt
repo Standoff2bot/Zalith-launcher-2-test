@@ -34,9 +34,10 @@ import com.movtery.zalithlauncher.utils.string.splitPreservingQuotes
  *  - 如果这些参数已经存在，不会重复添加。
  */
 object JvmPerformanceFlags {
-    private val GC_FLAG_REGEX = Regex("^-XX:[+-]Use\\w*GC$")
+    private val GC_FLAG_REGEX = Regex("^-XX:[+-]Use(?!UnlockExperimentalVMOptions)\\w*GC$")
 
     val RECOMMENDED_FLAGS: List<String> = listOf(
+        "-XX:+UnlockExperimentalVMOptions",
         "-XX:+UseG1GC",
         "-XX:MaxGCPauseMillis=40",
         "-XX:+ParallelRefProcEnabled",
