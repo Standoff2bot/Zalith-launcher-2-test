@@ -185,8 +185,20 @@ int pojavInitOpenGL() {
 
 EXTERNAL_API int pojavInit() {
     ANativeWindow_acquire(pojav_environ->pojavWindow);
-    pojav_environ->savedWidth = ANativeWindow_getWidth(pojav_environ->pojavWindow);
-    pojav_environ->savedHeight = ANativeWindow_getHeight(pojav_environ->pojavWindow);
+    int32_t rawWidth = ANativeWindow_getWidth(pojav_environ->pojavWindow);
+    int32_t rawHeight = ANativeWindow_getHeight(pojav_environ->pojavWindow);
+    
+    // Fix orientation: ANativeWindow dimensions may be incorrect before Android applies sensorLandscape.
+    // If height > width (portrait), swap them to force landscape orientation for Minecraft.
+    if (rawHeight > rawWidth) {
+        printf("EGLBridge: Detected portrait dimensions (%dx%d), swapping to landscape\n", rawWidth, rawHeight);
+        pojav_environ->savedWidth = rawHeight;
+        pojav_environ->savedHeight = rawWidth;
+    } else {
+        pojav_environ->savedWidth = rawWidth;
+        pojav_environ->savedHeight = rawHeight;
+    }
+    
     ANativeWindow_setBuffersGeometry(pojav_environ->pojavWindow,pojav_environ->savedWidth,pojav_environ->savedHeight,AHARDWAREBUFFER_FORMAT_R8G8B8X8_UNORM);
     pojavInitOpenGL();
     return 1;
