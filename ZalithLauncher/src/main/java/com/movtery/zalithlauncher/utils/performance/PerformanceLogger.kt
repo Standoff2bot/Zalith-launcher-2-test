@@ -21,7 +21,7 @@ package com.movtery.zalithlauncher.utils.performance
 import android.app.ActivityManager
 import android.content.Context
 import android.os.Debug
-import com.movtery.zalithlauncher.context.GlobalContext
+import com.movtery.zalithlauncher.path.PathManager
 import com.movtery.zalithlauncher.utils.logging.Logger
 import java.io.File
 import java.io.FileWriter
@@ -31,7 +31,7 @@ import java.util.concurrent.atomic.AtomicLong
 /**
  * Lightweight performance metrics logger for debugging and optimization.
  * Tracks FPS, memory usage, and renderer info when enabled via settings.
- * 
+ *
  * Logs are written to: launcher_cache/performance_log.txt
  * Enable via Settings > Advanced > Performance Logging
  */
@@ -41,27 +41,35 @@ object PerformanceLogger {
     private val lastLogTime = AtomicLong(0)
     private val frameCount = AtomicLong(0)
     private val lastFrameTime = AtomicLong(System.nanoTime())
-    
+
     private var logFile: File? = null
     private var logWriter: FileWriter? = null
+    private var cachedContext: Context? = null
     
+    /**
+     * Initialize with Android Context (call from UI process)
+     */
+    fun initialize(context: Context) {
+        cachedContext = context.applicationContext
+    }
+
     fun setEnabled(enable: Boolean) {
         if (enable == enabled.get()) return
-        
+
         enabled.set(enable)
-        
+
         if (enable) {
             startLogging()
         } else {
             stopLogging()
         }
     }
-    
+
     fun isEnabled(): Boolean = enabled.get()
-    
+
     private fun startLogging() {
         try {
-            val cacheDir = GlobalContext.cacheDir
+            val cacheDir = cachedContext?.cacheDir ?: PathManager.DIR_CACHE
             logFile = File(cacheDir, "performance_log.txt")
             logWriter = FileWriter(logFile, true)
             
@@ -142,13 +150,9 @@ object PerformanceLogger {
         val usedMemory = (runtime.totalMemory() - runtime.freeMemory()) / (1024 * 1024)
         val totalMemory = runtime.maxMemory() / (1024 * 1024)
         val nativeHeap = Debug.getNativeHeapAllocatedSize() / (1024 * 1024)
-        
-        val activityManager = GlobalContext.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        val memInfo = ActivityManager.MemoryInfo()
-        activityManager.getMemoryInfo(memInfo)
-        
+
         val renderer = System.getenv("POJAV_RENDERER") ?: "unknown"
-        
+
         return MemoryInfo(
             usedMB = usedMemory,
             totalMB = totalMemory,

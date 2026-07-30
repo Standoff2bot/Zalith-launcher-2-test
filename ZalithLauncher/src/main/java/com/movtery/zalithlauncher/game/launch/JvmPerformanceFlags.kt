@@ -20,8 +20,8 @@ package com.movtery.zalithlauncher.game.launch
 
 import android.app.ActivityManager
 import android.content.Context
-import com.movtery.zalithlauncher.context.GlobalContext
 import com.movtery.zalithlauncher.utils.string.splitPreservingQuotes
+import kotlin.properties.Delegates
 
 /**
  * 推荐的 JVM 性能调优参数（可选，通过设置界面的按钮手动应用，不会自动强加给所有用户）。
@@ -38,15 +38,38 @@ import com.movtery.zalithlauncher.utils.string.splitPreservingQuotes
  */
 object JvmPerformanceFlags {
     private val GC_FLAG_REGEX = Regex("^-XX:[+-]Use(?!UnlockExperimentalVMOptions)\\w*GC$")
+    
+    /**
+     * Cached total RAM in MB, set from UI process before launching JVM.
+     * Falls back to Runtime.maxMemory() if not set (JVM process).
+     */
+    private var cachedTotalRAM: Long? = null
+    
+    /**
+     * Initialize RAM detection from Android Context (must be called from UI process).
+     */
+    fun initialize(context: Context) {
+        try {
+            val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+            val memInfo = ActivityManager.MemoryInfo()
+            activityManager.getMemoryInfo(memInfo)
+            cachedTotalRAM = memInfo.totalMem / (1024 * 1024)
+        } catch (e: Exception) {
+            // Fallback will be used
+        }
+    }
 
     /**
      * 获取设备总内存（MB）
+     * 如果从 UI 进程初始化过，使用缓存值；否则使用 Runtime.maxMemory() 作为粗略估计
      */
     private fun getTotalMemoryMB(): Long {
-        val activityManager = GlobalContext.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-        val memInfo = ActivityManager.MemoryInfo()
-        activityManager.getMemoryInfo(memInfo)
-        return memInfo.totalMem / (1024 * 1024)
+        return cachedTotalRAM ?: run {
+            // Fallback: estimate based on max heap size
+            // Typical Android allocates 1/4 to 1/3 of total RAM as max heap
+            val maxHeapMB = Runtime.getRuntime().maxMemory() / (1024 * 1024)
+            (maxHeapMB * 3).coerceAtMost(16384) // Assume 3x multiplier, cap at 16GB
+        }
     }
 
     /**

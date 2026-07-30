@@ -88,6 +88,13 @@ class ZLApplication : Application(), SingletonImageLoader.Factory {
             Logger.initialize(this)
 
             initializeData()
+            
+            // Initialize JvmPerformanceFlags with device RAM info
+            com.movtery.zalithlauncher.game.launch.JvmPerformanceFlags.initialize(this)
+            
+            // Initialize PerformanceLogger with context
+            com.movtery.zalithlauncher.utils.performance.PerformanceLogger.initialize(this)
+            
             PathManager.DIR_FILES_PRIVATE = getDir("files", MODE_PRIVATE)
             DEVICE_ARCHITECTURE = Architecture.getDeviceArchitecture()
             //Force x86 lib directory for Asus x86 based zenfones
