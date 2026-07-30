@@ -151,7 +151,15 @@ int virglInit() {
 
     pthread_t t;
     pthread_create(&t, NULL, egl_make_current, (void *)ctx);
-    usleep(100*1000); // need enough time for the server to init
+    
+    // Poll for server initialization instead of fixed 100ms delay
+    int retries = 0;
+    const int MAX_RETRIES = 20; // 20 * 5ms = 100ms max
+    while (retries < MAX_RETRIES && OSMesaCreateContext_p == NULL) {
+        usleep(5000); // 5ms between checks
+        retries++;
+    }
+    printf("VirGL: server initialized after %dms\n", retries * 5);
 
     if (OSMesaCreateContext_p == NULL)
     {

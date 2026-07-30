@@ -18,6 +18,9 @@
 
 package com.movtery.zalithlauncher.game.launch
 
+import android.app.ActivityManager
+import android.content.Context
+import com.movtery.zalithlauncher.ZLApplication
 import com.movtery.zalithlauncher.utils.string.splitPreservingQuotes
 
 /**
@@ -36,19 +39,58 @@ import com.movtery.zalithlauncher.utils.string.splitPreservingQuotes
 object JvmPerformanceFlags {
     private val GC_FLAG_REGEX = Regex("^-XX:[+-]Use(?!UnlockExperimentalVMOptions)\\w*GC$")
 
-    val RECOMMENDED_FLAGS: List<String> = listOf(
-        "-XX:+UnlockExperimentalVMOptions",
-        "-XX:+UseG1GC",
-        "-XX:MaxGCPauseMillis=40",
-        "-XX:+ParallelRefProcEnabled",
-        "-XX:G1NewSizePercent=20",
-        "-XX:G1ReservePercent=20",
-        "-XX:G1HeapRegionSize=8M",
-        "-XX:G1MixedGCCountTarget=4",
-        "-XX:InitiatingHeapOccupancyPercent=15",
-        "-XX:+UseStringDeduplication",
-        "-XX:+AlwaysPreTouch"
-    )
+    /**
+     * 获取设备总内存（MB）
+     */
+    private fun getTotalMemoryMB(): Long {
+        val activityManager = ZLApplication.getContext().getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val memInfo = ActivityManager.MemoryInfo()
+        activityManager.getMemoryInfo(memInfo)
+        return memInfo.totalMem / (1024 * 1024)
+    }
+
+    /**
+     * 根据设备内存动态选择最优的 GC 参数
+     * 
+     * - 12GB+: 激进 G1GC (40ms pause, 适合高端设备)
+     * - 6-12GB: 温和 G1GC (80ms pause, 平衡性能和稳定性)
+     * - <6GB: SerialGC (低内存 overhead, 适合低端设备)
+     */
+    val RECOMMENDED_FLAGS: List<String>
+        get() {
+            val totalRAM = getTotalMemoryMB()
+            
+            return when {
+                totalRAM >= 12000 -> listOf(
+                    "-XX:+UnlockExperimentalVMOptions",
+                    "-XX:+UseG1GC",
+                    "-XX:MaxGCPauseMillis=40",
+                    "-XX:+ParallelRefProcEnabled",
+                    "-XX:G1NewSizePercent=20",
+                    "-XX:G1ReservePercent=20",
+                    "-XX:G1HeapRegionSize=8M",
+                    "-XX:G1MixedGCCountTarget=4",
+                    "-XX:InitiatingHeapOccupancyPercent=15",
+                    "-XX:+UseStringDeduplication",
+                    "-XX:+AlwaysPreTouch"
+                )
+                totalRAM >= 6000 -> listOf(
+                    "-XX:+UseG1GC",
+                    "-XX:MaxGCPauseMillis=80",
+                    "-XX:+ParallelRefProcEnabled",
+                    "-XX:G1NewSizePercent=15",
+                    "-XX:G1ReservePercent=15",
+                    "-XX:G1HeapRegionSize=4M",
+                    "-XX:InitiatingHeapOccupancyPercent=20",
+                    "-XX:+UseStringDeduplication"
+                )
+                else -> listOf(
+                    "-XX:+UseSerialGC",
+                    "-XX:MinHeapFreeRatio=10",
+                    "-XX:MaxHeapFreeRatio=20"
+                )
+            }
+        }
 
     /** @return 是否可以应用（即用户尚未手动指定过其他 GC，且尚未完整应用过） */
     fun canApply(currentArgs: String): Boolean {

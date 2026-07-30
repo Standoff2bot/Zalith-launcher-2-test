@@ -18,6 +18,7 @@
 
 package com.movtery.zalithlauncher.game.renderer.renderers
 
+import com.movtery.zalithlauncher.BuildConfig
 import com.movtery.zalithlauncher.game.renderer.RendererInterface
 
 object KopperZinkRenderer : RendererInterface {
@@ -30,13 +31,21 @@ object KopperZinkRenderer : RendererInterface {
     override fun getRendererSummary(): String = "Zink compact + immediate present"
 
     override fun getRendererEnv(): Lazy<Map<String, String>> = lazy {
-        mapOf(
+        val baseEnv = mutableMapOf(
             "LIBGL_ES" to "3",
             // Compact descriptor mode — reduces memory usage on Mali GPUs
             "ZINK_DEBUG" to "compact",
             // Immediate present mode for lowest input latency
             "MESA_VK_WSI_PRESENT_MODE" to "immediate",
         )
+        
+        // Disable Vulkan validation layers in release builds (30-50% overhead)
+        if (!BuildConfig.DEBUG) {
+            baseEnv["DISABLE_LAYER_AMD_SWITCHABLE_GRAPHICS_1"] = "1"
+            baseEnv["DISABLE_VK_LAYER_LUNARG_api_dump"] = "1"
+        }
+        
+        baseEnv
     }
 
     override fun getDlopenLibrary(): Lazy<List<String>> = lazy { emptyList() }

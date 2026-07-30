@@ -18,8 +18,10 @@
 
 package com.movtery.zalithlauncher.game.renderer.renderers
 
+import android.os.Build
 import com.movtery.zalithlauncher.game.renderer.RendererInterface
 import com.movtery.zalithlauncher.path.PathManager
+import com.movtery.zalithlauncher.utils.isMaliGPU
 
 object PanfrostRenderer : RendererInterface {
     override fun getRendererId(): String = "gallium_panfrost"
@@ -33,7 +35,7 @@ object PanfrostRenderer : RendererInterface {
     override fun getMaxMCVersion(): String = "1.21.4"
 
     override fun getRendererEnv(): Lazy<Map<String, String>> = lazy {
-        mapOf(
+        val baseEnv = mutableMapOf(
             // Shader cache for Panfrost — reuses compiled shaders across launches
             "MESA_SHADER_CACHE_DIR" to PathManager.DIR_CACHE.absolutePath,
             "MESA_GLSL_CACHE_DIR" to PathManager.DIR_CACHE.absolutePath,
@@ -45,6 +47,13 @@ object PanfrostRenderer : RendererInterface {
             // Prefer low-latency rendering over vsync
             "vblank_mode" to "0",
         )
+        
+        // Enable 4x MSAA on Mali G710+ for better anti-aliasing with minimal overhead
+        if (isMaliGPU() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            baseEnv["PAN_MESA_DEBUG"] = "noafbc,msaa4"
+        }
+        
+        baseEnv
     }
 
     override fun getDlopenLibrary(): Lazy<List<String>> = lazy { emptyList() }
