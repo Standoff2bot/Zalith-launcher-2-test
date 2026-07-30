@@ -19,6 +19,7 @@
 package com.movtery.zalithlauncher.game.renderer.renderers
 
 import com.movtery.zalithlauncher.game.renderer.RendererInterface
+import com.movtery.zalithlauncher.path.PathManager
 
 object FreedrenoRenderer : RendererInterface {
     override fun getRendererId(): String = "gallium_freedreno"
@@ -27,7 +28,15 @@ object FreedrenoRenderer : RendererInterface {
 
     override fun getRendererName(): String = "Freedreno (Adreno)"
 
-    override fun getRendererEnv(): Lazy<Map<String, String>> = lazy { emptyMap() }
+    override fun getRendererSummary(): String = "Shader cache + no-error"
+
+    override fun getRendererEnv(): Lazy<Map<String, String>> = lazy {
+        mapOf(
+            "MESA_SHADER_CACHE_DIR" to PathManager.DIR_CACHE.absolutePath,
+            "MESA_GLSL_CACHE_DIR" to PathManager.DIR_CACHE.absolutePath,
+            "MESA_NO_ERROR" to "1",
+        )
+    }
 
     override fun getDlopenLibrary(): Lazy<List<String>> = lazy { emptyList() }
 

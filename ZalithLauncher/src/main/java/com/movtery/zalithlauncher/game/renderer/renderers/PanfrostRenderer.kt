@@ -19,6 +19,7 @@
 package com.movtery.zalithlauncher.game.renderer.renderers
 
 import com.movtery.zalithlauncher.game.renderer.RendererInterface
+import com.movtery.zalithlauncher.path.PathManager
 
 object PanfrostRenderer : RendererInterface {
     override fun getRendererId(): String = "gallium_panfrost"
@@ -27,9 +28,24 @@ object PanfrostRenderer : RendererInterface {
 
     override fun getRendererName(): String = "Panfrost (Mali)"
 
+    override fun getRendererSummary(): String = "Shader cache + no-error + AFBC off"
+
     override fun getMaxMCVersion(): String = "1.21.4"
 
-    override fun getRendererEnv(): Lazy<Map<String, String>> = lazy { emptyMap() }
+    override fun getRendererEnv(): Lazy<Map<String, String>> = lazy {
+        mapOf(
+            // Shader cache for Panfrost — reuses compiled shaders across launches
+            "MESA_SHADER_CACHE_DIR" to PathManager.DIR_CACHE.absolutePath,
+            "MESA_GLSL_CACHE_DIR" to PathManager.DIR_CACHE.absolutePath,
+            // Disable GL error checking for ~5-10% perf gain on Mali
+            "MESA_NO_ERROR" to "1",
+            // Disable AFBC on Mali G-series (G710) — avoids texture corruption
+            // and saves memory bandwidth. Remove if no visual glitches occur.
+            "PAN_MESA_DEBUG" to "noafbc",
+            // Prefer low-latency rendering over vsync
+            "vblank_mode" to "0",
+        )
+    }
 
     override fun getDlopenLibrary(): Lazy<List<String>> = lazy { emptyList() }
 

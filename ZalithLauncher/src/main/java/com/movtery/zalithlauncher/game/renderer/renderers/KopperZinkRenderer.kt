@@ -27,9 +27,15 @@ object KopperZinkRenderer : RendererInterface {
 
     override fun getRendererName(): String = "Kopper Zink"
 
+    override fun getRendererSummary(): String = "Zink compact + immediate present"
+
     override fun getRendererEnv(): Lazy<Map<String, String>> = lazy {
         mapOf(
-            "LIBGL_ES" to "3"
+            "LIBGL_ES" to "3",
+            // Compact descriptor mode — reduces memory usage on Mali GPUs
+            "ZINK_DEBUG" to "compact",
+            // Immediate present mode for lowest input latency
+            "MESA_VK_WSI_PRESENT_MODE" to "immediate",
         )
     }
 

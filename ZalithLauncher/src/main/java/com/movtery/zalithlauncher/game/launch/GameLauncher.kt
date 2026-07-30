@@ -42,8 +42,10 @@ import com.movtery.zalithlauncher.game.path.GamePathManager
 import com.movtery.zalithlauncher.game.plugin.driver.DriverPluginManager
 import com.movtery.zalithlauncher.game.plugin.renderer.RendererPluginManager
 import com.movtery.zalithlauncher.game.renderer.Renderers
+import com.movtery.zalithlauncher.game.renderer.renderers.FreedrenoRenderer
 import com.movtery.zalithlauncher.game.renderer.renderers.GL4ESRenderer
 import com.movtery.zalithlauncher.game.renderer.renderers.NGGL4ESRenderer
+import com.movtery.zalithlauncher.game.renderer.renderers.PanfrostRenderer
 import com.movtery.zalithlauncher.game.support.touch_controller.ControllerProxy
 import com.movtery.zalithlauncher.game.version.installed.Version
 import com.movtery.zalithlauncher.game.version.installed.VersionInfoParser
@@ -394,7 +396,11 @@ private fun setRendererEnv(envMap: MutableMap<String, String>) {
     if (RendererPluginManager.selectedRendererPlugin != null) return
 
     if (renderer != GL4ESRenderer && renderer != NGGL4ESRenderer) {
-        envMap["MESA_LOADER_DRIVER_OVERRIDE"] = "zink"
+        // Native Gallium drivers (Panfrost, Freedreno) use their own driver override;
+        // only set zink for renderers that actually go through Zink (KopperZink, vulkan_zink, etc.)
+        if (renderer != PanfrostRenderer && renderer != FreedrenoRenderer) {
+            envMap["MESA_LOADER_DRIVER_OVERRIDE"] = "zink"
+        }
         envMap["MESA_GLSL_CACHE_DIR"] = PathManager.DIR_CACHE.absolutePath
         envMap["MESA_SHADER_CACHE_DIR"] = PathManager.DIR_CACHE.absolutePath
         envMap["MESA_GL_VERSION_OVERRIDE"] = "4.6"
