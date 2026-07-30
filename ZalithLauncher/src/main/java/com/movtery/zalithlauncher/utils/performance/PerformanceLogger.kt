@@ -21,7 +21,7 @@ package com.movtery.zalithlauncher.utils.performance
 import android.app.ActivityManager
 import android.content.Context
 import android.os.Debug
-import com.movtery.zalithlauncher.ZLApplication
+import com.movtery.zalithlauncher.context.GlobalContext
 import com.movtery.zalithlauncher.utils.logging.Logger
 import java.io.File
 import java.io.FileWriter
@@ -61,7 +61,7 @@ object PerformanceLogger {
     
     private fun startLogging() {
         try {
-            val cacheDir = ZLApplication.getContext().cacheDir
+            val cacheDir = GlobalContext.cacheDir
             logFile = File(cacheDir, "performance_log.txt")
             logWriter = FileWriter(logFile, true)
             
@@ -143,7 +143,7 @@ object PerformanceLogger {
         val totalMemory = runtime.maxMemory() / (1024 * 1024)
         val nativeHeap = Debug.getNativeHeapAllocatedSize() / (1024 * 1024)
         
-        val activityManager = ZLApplication.getContext().getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val activityManager = GlobalContext.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val memInfo = ActivityManager.MemoryInfo()
         activityManager.getMemoryInfo(memInfo)
         

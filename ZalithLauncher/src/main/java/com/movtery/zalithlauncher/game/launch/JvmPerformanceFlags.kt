@@ -20,7 +20,7 @@ package com.movtery.zalithlauncher.game.launch
 
 import android.app.ActivityManager
 import android.content.Context
-import com.movtery.zalithlauncher.ZLApplication
+import com.movtery.zalithlauncher.context.GlobalContext
 import com.movtery.zalithlauncher.utils.string.splitPreservingQuotes
 
 /**
@@ -43,7 +43,7 @@ object JvmPerformanceFlags {
      * 获取设备总内存（MB）
      */
     private fun getTotalMemoryMB(): Long {
-        val activityManager = ZLApplication.getContext().getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+        val activityManager = GlobalContext.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         val memInfo = ActivityManager.MemoryInfo()
         activityManager.getMemoryInfo(memInfo)
         return memInfo.totalMem / (1024 * 1024)
