@@ -115,7 +115,7 @@ int virglInit() {
         return 0;
     }
 
-    ANativeWindow_setBuffersGeometry(pojav_environ->pojavWindow, 0, 0, vid);
+    ANativeWindow_setBuffersGeometry(pojav_environ->pojavWindow, pojav_environ->savedWidth, pojav_environ->savedHeight, vid);
 
     eglBindAPI_p(EGL_OPENGL_ES_API);
 

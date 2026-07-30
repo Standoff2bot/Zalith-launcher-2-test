@@ -128,7 +128,7 @@ void gl_swap_surface(gl_render_window_t* bundle) {
         bundle->nativeSurface = bundle->newNativeSurface;
         bundle->newNativeSurface = NULL;
         ANativeWindow_acquire(bundle->nativeSurface);
-        ANativeWindow_setBuffersGeometry(bundle->nativeSurface, 0, 0, bundle->format);
+        ANativeWindow_setBuffersGeometry(bundle->nativeSurface, pojav_environ->savedWidth, pojav_environ->savedHeight, bundle->format);
         bundle->surface = eglCreateWindowSurface_p(g_EglDisplay, bundle->config, bundle->nativeSurface, NULL);
         return;
     }
