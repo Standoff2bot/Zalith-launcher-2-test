@@ -75,6 +75,7 @@ object JvmPerformanceFlags {
                     "-XX:+AlwaysPreTouch"
                 )
                 totalRAM >= 6000 -> listOf(
+                    "-XX:+UnlockExperimentalVMOptions",
                     "-XX:+UseG1GC",
                     "-XX:MaxGCPauseMillis=80",
                     "-XX:+ParallelRefProcEnabled",
