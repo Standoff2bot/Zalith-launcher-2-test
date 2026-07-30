@@ -52,6 +52,23 @@ open class JvmLauncher(
 
     }
 
+    override fun progressFinalUserArgs(args: MutableList<String>, ramAllocation: Int) {
+        // Для headless процессов (Forge/NeoForge установщики) не вызываем базовый метод,
+        // т.к. он добавляет -javaagent:MioLibPatcher.jar, требующий libinstrument.so
+        if (jvmLaunchInfo.headless) {
+            // Только базовые аргументы без javaagent
+            args.purgeArg("-Xms")
+            args.purgeArg("-Xmx")
+            
+            val initialHeap = (ramAllocation / 2).coerceAtLeast(256)
+            args.add("-Xms${initialHeap}M")
+            args.add("-Xmx${ramAllocation}M")
+        } else {
+            // Для GUI процессов используем стандартную обработку
+            super.progressFinalUserArgs(args, ramAllocation)
+        }
+    }
+
     override suspend fun launch(screenSize: IntSize): Int {
         generateLauncherProfiles(jvmLaunchInfo.userHome)
         val (runtime, argList) = getStartupNeeded(screenSize)
