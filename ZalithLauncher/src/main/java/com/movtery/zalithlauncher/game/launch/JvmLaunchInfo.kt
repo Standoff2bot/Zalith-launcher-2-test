@@ -27,6 +27,7 @@ import kotlinx.parcelize.Parcelize
  * @param jvmArgs Java虚拟机参数
  * @param jreName 使用的Java名称
  * @param useUserJvm 是否允许使用用户指定的参数
+ * @param headless 是否为无GUI的headless模式（不加载Cacio和javaagent）
  */
 @Keep
 @Parcelize
@@ -35,4 +36,5 @@ data class JvmLaunchInfo(
     val jreName: String? = null,
     val userHome: String? = null,
     val useUserJvm: Boolean = true,
+    val headless: Boolean = false,
 ) : Parcelable

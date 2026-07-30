@@ -171,6 +171,7 @@ class JvmService : Service() {
             jreName = jreName,
             userHome = userHome,
             useUserJvm = false,
+            headless = true, // Forge установщик - консольное приложение без GUI
         )
 
         val launcher = JvmLauncher(

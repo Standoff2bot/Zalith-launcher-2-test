@@ -91,9 +91,12 @@ open class JvmLauncher(
             RuntimesManager.forceReload(AllSettings.javaRuntime.getValue())
         }
 
-        val argList: MutableList<String> = ArrayList(
-            getCacioJavaArgs(screenSize, runtime.javaVersion == 8)
-        ).apply {
+        val argList: MutableList<String> = ArrayList<String>().apply {
+            // Для headless процессов (Forge installer) не добавляем Cacio и javaagent,
+            // т.к. они требуют libinstrument.so (отсутствует в JRE-8)
+            if (!jvmLaunchInfo.headless) {
+                addAll(getCacioJavaArgs(screenSize, runtime.javaVersion == 8))
+            }
             addAll(args)
         }
 
