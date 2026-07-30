@@ -20,10 +20,12 @@ package com.movtery.zalithlauncher.game.download.jvm_server
 
 import android.app.Notification
 import android.app.Service
+import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
 import android.os.Build
 import android.os.IBinder
+import android.os.PowerManager
 import androidx.compose.ui.unit.IntSize
 import androidx.core.app.NotificationCompat
 import com.movtery.zalithlauncher.R
@@ -51,12 +53,16 @@ private const val TAG = "JvmService"
 
 class JvmService : Service() {
     private val scope = CoroutineScope(Dispatchers.Default)
+    private var wakeLock: PowerManager.WakeLock? = null
 
     override fun onBind(intent: Intent?): IBinder? = null
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         //立即尝试启动前台服务，防止启动超时
         postNotification()
+        
+        //获取 WakeLock 防止 Doze Mode 杀死长时间运行的进程（如 Forge 安装）
+        acquireWakeLock()
 
         if (intent == null) {
             stopSelf()
@@ -114,6 +120,7 @@ class JvmService : Service() {
     }
 
     override fun onDestroy() {
+        releaseWakeLock()
         super.onDestroy()
         android.os.Process.killProcess(android.os.Process.myPid())
     }
@@ -201,5 +208,33 @@ class JvmService : Service() {
         }.getOrElse { 1 }
 
         onExit(code, false)
+    }
+
+    private fun acquireWakeLock() {
+        try {
+            if (wakeLock == null) {
+                val powerManager = getSystemService(Context.POWER_SERVICE) as PowerManager
+                wakeLock = powerManager.newWakeLock(
+                    PowerManager.PARTIAL_WAKE_LOCK,
+                    "ZalithLauncher::JvmServiceWakeLock"
+                )
+            }
+            wakeLock?.acquire(10 * 60 * 1000L) // 10 минут максимум для одного процесса
+            Logger.info(TAG, "WakeLock acquired to prevent Doze Mode from killing JVM process")
+        } catch (e: Exception) {
+            Logger.error(TAG, "Failed to acquire WakeLock", e)
+        }
+    }
+
+    private fun releaseWakeLock() {
+        try {
+            if (wakeLock?.isHeld == true) {
+                wakeLock?.release()
+                Logger.info(TAG, "WakeLock released")
+            }
+            wakeLock = null
+        } catch (e: Exception) {
+            Logger.error(TAG, "Failed to release WakeLock", e)
+        }
     }
 }
